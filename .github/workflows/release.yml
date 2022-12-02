@@ -1,0 +1,70 @@
+name: Release code
+on:
+  release:
+    types:
+      - "released"
+permissions:
+  contents: read
+jobs:
+  create-uat-pull-request:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    # Validate the branch released
+    if: github.event.release.target_commitish == 'refs/heads/develop'
+    steps:
+      # Checkout repository to base branch and ensure that it's up to date
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          ref: uat
+      - name: Reset branch
+        run: |
+          git fetch origin develop:develop
+          git reset --hard develop
+      # Create a new branch, fetch changes from specified base branch and create a new Pull request
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: Revelase to UAT
+          title: Release DEVELOP to UAT
+          body: ${{ github.event.release.body }}
+          branch: uat-release-candidate
+          base: uat
+          labels: release
+          delete-branch: true
+       # https://github.com/marketplace/actions/enable-pull-request-automerge    
+      # - name: Enable Pull Request Automerge
+      #   if: steps.cpr.outputs.pull-request-operation == 'created'
+      #   uses: peter-evans/enable-pull-request-automerge@v2
+      #   with:
+      #     #token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      #     pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+      #     merge-method: merge
+  create-prod-pull-request:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    # Validate the branch released
+    if: github.event.release.target_commitish == 'refs/heads/uat'
+    steps:
+      # Checkout repository to base branch and ensure that it's up to date
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          ref: main
+      - name: Reset branch
+        run: |
+          git fetch origin main:main
+          git reset --hard main
+      # Create a new branch, fetch changes from specified base branch and create a new Pull request
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: Revelase to PRODUCTION ${{ github.event.release.tag_name }}
+          title: Release UAT to PRODUCTION ${{ github.event.release.tag_name }}
+          body: ${{ github.event.release.body }}
+          branch: production-release
+          base: main
+          labels: release
+          delete-branch: true

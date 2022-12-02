@@ -1,0 +1,14 @@
+# Branch types
+feature: [feature/*, feat/*]
+bugfix: [bugfix/*, fix/*, hotfix/*, hot/*]
+chore: [chore/*]
+release: [release/*]
+BREAKING!: [break/*]
+
+# Release versioning
+major: [hotfix/*, break/*]
+minor: [feature/*, feat/*]
+patch: [bugfix/*, fix/*]
+
+# Backports
+backport develop: [hotfix/*, hot/*]
